@@ -1,0 +1,30 @@
+{
+  "current_timestamp": "2025-03-14T13:06:54.693712",
+  "previous_timestamp": "2025-03-14T13:03:45.520321",
+  "metrics_comparison": {
+    "avg_match_percentage": {
+      "current": 0.5666666666666667,
+      "previous": 0.6135802469135803,
+      "difference": -0.04691358024691361,
+      "percent_change": -7.645875251509058
+    },
+    "avg_ship_cell_prob": {
+      "current": 0.4893790304660797,
+      "previous": 0.4582687206566334,
+      "difference": 0.031110309809446346,
+      "percent_change": 6.7886609770943425
+    },
+    "avg_empty_cell_prob": {
+      "current": 0.3766279648989439,
+      "previous": 0.32727327197790146,
+      "difference": 0.04935469292104244,
+      "percent_change": 15.080575515001124
+    },
+    "avg_hit_rate_high_prob": {
+      "current": 0.465682334909305,
+      "previous": 0.49442028000063115,
+      "difference": -0.028737945091326156,
+      "percent_change": -5.812452735816069
+    }
+  }
+}

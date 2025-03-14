@@ -1,17 +1,86 @@
+"""
+Battleship Game - Random State Generator
+
+This module provides a Battleship game implementation focused on generating random board states
+for AI training. It handles ship placement following standard Battleship rules and can simulate
+games in progress with hits and misses.
+
+Key Features:
+- Random ship placement with proper spacing (no ships touching, even diagonally)
+- Option to generate boards with random hits and misses
+- Ability to hide ship positions for AI training
+- Configurable grid size
+- Support for different ship sizes and quantities
+
+Example:
+    ```python
+    # Create a new game with default 9x9 grid
+    game = BattleshipGame()
+    
+    # Generate a random board state with ships, possibly some hits and misses
+    game.generate_random_state()
+    
+    # Display the full board (including ships)
+    game.display_board()
+    
+    # Display board with ships hidden (for AI)
+    game.display_board(hide_ships=True)
+    
+    # Get the numpy array representing the board
+    board = game.get_board()
+    
+    # Get board with ships hidden for AI training
+    hidden_board = game.get_hidden_board()
+    ```
+"""
+
 import numpy as np
 import random
 
 class CellState:
-    """Represents possible states of a cell"""
+    """
+    Represents possible states of a cell on the game board.
+    
+    Attributes:
+        EMPTY (int): Represents an empty cell (0)
+        MISS (int): Represents a missed shot (-1)
+        HIT (int): Represents a hit on a ship (1)
+        SHIP (int): Represents an undamaged ship cell (2)
+    """
     EMPTY = 0
     MISS = -1
     HIT = 1
     SHIP = 2
 
 class BattleshipGame:
-    """Handles random game state generation and game management"""
+    """
+    Handles random game state generation and game management for Battleship.
+    
+    This class provides functionality to create and manage Battleship game boards,
+    particularly focused on generating random states for AI training. It ensures
+    proper ship placement according to standard Battleship rules where ships cannot
+    touch (even diagonally).
+
+    Attributes:
+        grid_size (int): Size of the square game board (default: 9)
+        ships (list): List of ship sizes to place (default: 3 ships of size 4, 5 ships of size 3)
+        board (numpy.ndarray): The game board as a 2D numpy array
+        ship_objects (list): List of dictionaries containing ship information
+
+    The board uses the following cell states:
+        0 (EMPTY): Empty cell
+        -1 (MISS): Missed shot
+        1 (HIT): Hit on a ship
+        2 (SHIP): Undamaged ship cell
+    """
 
     def __init__(self, grid_size=9):
+        """
+        Initialize a new Battleship game.
+
+        Args:
+            grid_size (int, optional): Size of the square game board. Defaults to 9.
+        """
         self.grid_size = grid_size
         self.ships = [4, 4, 4, 3, 3, 3, 3, 3] # 3 ships of size 4, 5 ships of 3
         self.board = np.zeros((grid_size, grid_size), dtype=np.int8)
@@ -19,7 +88,16 @@ class BattleshipGame:
         self.ship_objects = []
     
     def place_ships(self):
-        """Places ships randomly on the board without overlap"""
+        """
+        Places ships randomly on the board without overlap or adjacency.
+        
+        This method attempts to place all ships in the self.ships list randomly on the board.
+        Ships cannot overlap or touch each other (even diagonally). If placement becomes
+        impossible with the current layout, it will retry with a new board layout.
+        
+        Raises:
+            RuntimeError: If unable to place all ships after maximum retries.
+        """
         self.ship_objects = []  # Reset ship objects
         
         # Try different ship placement orders if we get stuck
@@ -87,7 +165,16 @@ class BattleshipGame:
         raise RuntimeError(f"Could not place all ships after {max_retries} board layout attempts")
                     
     def generate_random_state(self):
-        """Generates a random board state"""
+        """
+        Generates a random board state.
+        
+        This method:
+        1. Places all ships randomly on the board
+        2. Has a 50% chance to add random hits on ships (10-30% of ship cells)
+        3. Adds random misses (10-15% of empty cells)
+        
+        The resulting board represents a game in progress, which can be used for AI training.
+        """
         self.board.fill(CellState.EMPTY)
         self.place_ships()
 
@@ -130,10 +217,14 @@ class BattleshipGame:
             r, c = empty_cells.pop(idx)
             self.board[r, c] = CellState.MISS
 
-    
     def _is_valid_placement(self, row, col, ship_size, orientation):
         """
-        Check if a ship can be placed at the given position
+        Check if a ship can be placed at the given position.
+        
+        This method ensures:
+        1. The ship stays within the board boundaries
+        2. The ship doesn't overlap with other ships
+        3. The ship doesn't touch other ships (even diagonally)
         
         Args:
             row (int): Starting row
@@ -169,7 +260,7 @@ class BattleshipGame:
     
     def _place_ship(self, row, col, ship_size, orientation):
         """
-        Place a ship on the board
+        Place a ship on the board.
         
         Args:
             row (int): Starting row
@@ -185,13 +276,23 @@ class BattleshipGame:
                 self.board[r, col] = CellState.SHIP
                 
     def get_board(self):
-        """Returns the current game board"""
+        """
+        Returns the current game board.
+        
+        Returns:
+            numpy.ndarray: 2D array representing the current board state
+        """
         return self.board
     
     def get_hidden_board(self):
         """
-        Returns a board with ships hidden (for AI training)
-        Only shows hits and misses, not unhit ships
+        Returns a board with ships hidden (for AI training).
+        
+        This method returns a copy of the board where unhit ships are hidden
+        (replaced with EMPTY). Only hits and misses remain visible.
+        
+        Returns:
+            numpy.ndarray: 2D array representing the hidden board state
         """
         hidden_board = self.board.copy()
         # Replace SHIP cells with EMPTY
@@ -200,15 +301,56 @@ class BattleshipGame:
 
     def display_board(self, hide_ships=False):
         """
-        Prints the board for debugging
+        Prints the board for debugging.
         
         Args:
-            hide_ships (bool): If True, hides unhit ships (for AI training)
+            hide_ships (bool, optional): If True, hides unhit ships (for AI training).
+                                      Defaults to False.
+        
+        Board symbols:
+            '.' : Empty cell
+            '0' : Miss
+            'X' : Hit (on a ship that is not completely sunk)
+            'S' : Ship (visible only if hide_ships is False) or hit on a sunken ship
         """
-        board_to_display = self.get_hidden_board() if hide_ships else self.board
-        board_symbols = {CellState.EMPTY: '.', CellState.MISS: "0", CellState.HIT: "X", CellState.SHIP: "S"}
+        # Get the board to display
+        board_to_display = self.get_hidden_board().copy() if hide_ships else self.board.copy()
+        
+        # Update the display to show sunken ships with 'S' instead of 'X'
+        self._update_sunken_ships_display(board_to_display)
+        
+        # Define board symbols (adding special state 3 for sunken ship hits)
+        board_symbols = {CellState.EMPTY: '.', CellState.MISS: "0", CellState.HIT: "X", CellState.SHIP: "S", 3: "S"}
+        
         for row in board_to_display:
             print(" ".join(board_symbols[cell] for cell in row))
+    
+    def _update_sunken_ships_display(self, board):
+        """
+        Update the board display to show sunken ships with 'S' markers.
+        
+        This method checks each ship to see if it's completely sunk (all cells hit).
+        If a ship is sunk, it updates all its hit cells to a special state (3) that
+        will be displayed as 'S'.
+        
+        Args:
+            board (numpy.ndarray): The board to update
+        """
+        # Check each ship to see if it's sunk
+        for ship in self.ship_objects:
+            # A ship is sunk if the number of hits equals its size
+            if ship['hits'] == ship['size']:
+                # Update all cells of this sunken ship to the special state (3)
+                if ship['orientation'] == 0:  # Horizontal
+                    for c in range(ship['col'], ship['col'] + ship['size']):
+                        # Only update cells that are hits (to avoid affecting empty cells)
+                        if board[ship['row'], c] == CellState.HIT:
+                            board[ship['row'], c] = 3  # Special state for sunken ship
+                else:  # Vertical
+                    for r in range(ship['row'], ship['row'] + ship['size']):
+                        # Only update cells that are hits (to avoid affecting empty cells)
+                        if board[r, ship['col']] == CellState.HIT:
+                            board[r, ship['col']] = 3  # Special state for sunken ship
 
 # Example Usage
 if __name__ == "__main__":
