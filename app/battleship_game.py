@@ -295,8 +295,13 @@ class BattleshipGame:
             numpy.ndarray: 2D array representing the hidden board state
         """
         hidden_board = self.board.copy()
-        # Replace SHIP cells with EMPTY
+        
+        # First mark sunken ships
+        self._update_sunken_ships_display(hidden_board)
+        
+        # Replace non-sunken SHIP cells with EMPTY
         hidden_board[hidden_board == CellState.SHIP] = CellState.EMPTY
+        
         return hidden_board
 
     def display_board(self, hide_ships=False):
