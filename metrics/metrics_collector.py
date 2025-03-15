@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from app.battleship_game import BattleshipGame
-from app.heatmap_generator import HeatmapGenerator
+from app.pingram_heatmap_gen import HeatmapGenerator
 
 class MetricsCollector:
     """Collects and saves metrics for evaluating heatmap performance"""
